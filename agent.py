@@ -37,7 +37,8 @@ def create_research_agent():
     model = ChatOpenAI(
         model=_required_env("NVIDIA_MODEL"),
         api_key=_required_env("NVIDIA_API_KEY"),
-        base_url=os.getenv("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1"),
+        base_url=os.getenv("NVIDIA_BASE_URL",
+                           "https://integrate.api.nvidia.com/v1"),
         temperature=0,
         timeout=float(os.getenv("NVIDIA_TIMEOUT_SECONDS", "60")),
         max_retries=1,

@@ -1,6 +1,15 @@
 # NVD-XRAY
 
-NVD-XRAY is a small, inspectable Python CLI agent that queries the NVD CVE API 2.0 and returns a Pydantic-validated vulnerability brief. It currently uses NVIDIA's OpenAI-compatible endpoint with `nvidia/nemotron-3.5-super-vl-120b-a12b`.
+NVD-XRAY is a production-oriented vulnerability research console for NVD CVE API 2.0. It provides a responsive Flask web interface and a clean command-line report, backed by NVIDIA's OpenAI-compatible model endpoint and Pydantic validation.
+
+## Capabilities
+
+- Research an exact CVE identifier or search NVD by product and vulnerability keyword.
+- Display severity, CVSS, affected products, remediation, security guidance, limitations, and references.
+- Keep NVD evidence separate from model-generated defensive guidance.
+- Preserve unknown values instead of fabricating scores, versions, or patches.
+- Export validated reports as JSON from the web console.
+- Retry bounded NVD timeout, rate-limit, and transient server failures.
 
 ## Setup
 
@@ -11,31 +20,59 @@ pip install -r requirements.txt
 Copy-Item .env.example .env
 ```
 
-Set `NVIDIA_API_KEY` in `.env`. `NVD_API_KEY` is optional. Do not commit `.env`.
+Set `NVIDIA_API_KEY` in `.env`. An `NVD_API_KEY` is optional but recommended for higher NVD request limits. Never commit `.env`.
 
-## Run
+## Web Console
+
+Run the development server:
+
+```powershell
+python app.py
+```
+
+Run with the production WSGI server:
+
+```powershell
+waitress-serve --host=127.0.0.1 --port=5000 app:app
+```
+
+Open `http://127.0.0.1:5000`. The health check is available at `http://127.0.0.1:5000/health`.
+
+## Command Line
 
 ```powershell
 python main.py --cve-id CVE-2021-44228
 python main.py --query "Apache Log4j remote code execution"
+python main.py --cve-id CVE-2021-44228 --json
+python main.py --cve-id CVE-2021-44228 --trace
 ```
 
-By default, the CLI prints the model's tool selection, returned tool data, and the final validated report. Use `--hide-trace` for report-only output.
+The default CLI format is a readable terminal report. Use `--json` for automation and `--trace` for tool-call debugging.
 
-## Behavior
+## Environment
 
-- Exact CVE identifiers use `get_cve_details`.
-- Other requests use bounded `search_cves` results.
-- NVD is the fact source; inferred guidance is labeled separately through the system prompt and report fields.
-- Missing scores, versions, patches, or references remain unknown or empty.
-- Timeouts, NVD rate limits, and transient server failures use bounded retries.
+```text
+NVIDIA_API_KEY=...
+NVIDIA_BASE_URL=https://integrate.api.nvidia.com/v1
+NVIDIA_MODEL=nvidia/nemotron-3.5-super-vl-120b-a12b
+NVIDIA_TIMEOUT_SECONDS=60
+NVD_API_KEY=
+NVD_TIMEOUT_SECONDS=20
+FLASK_HOST=127.0.0.1
+FLASK_PORT=5000
+FLASK_DEBUG=false
+```
 
-## Test
+For internet-facing deployment, place the WSGI server behind TLS, authentication, request-rate controls, and a secrets manager.
+
+## Tests
 
 ```powershell
 python -m unittest discover -s tests -v
 ```
 
-## MVP Definition of Done
+## Runtime Requirements
 
-A user can search NVD by CVE ID or keyword, observe the agent's tool call and result, and receive a source-linked, schema-valid brief that separates verified NVD fields, defensive guidance, and unknowns.
+- Python 3.11 or newer
+- NVIDIA API credentials
+- Outbound HTTPS access to NVD and the configured NVIDIA endpoint

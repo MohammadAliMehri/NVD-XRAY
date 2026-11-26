@@ -16,7 +16,8 @@ def normalize_cve(item: dict[str, Any]) -> dict[str, Any]:
     cve = item.get("cve", {})
     descriptions = cve.get("descriptions", [])
     summary = next(
-        (entry.get("value") for entry in descriptions if entry.get("lang") == "en"),
+        (entry.get("value")
+         for entry in descriptions if entry.get("lang") == "en"),
         "Unknown",
     )
 
@@ -26,7 +27,8 @@ def normalize_cve(item: dict[str, Any]) -> dict[str, Any]:
         metrics = cve.get("metrics", {}).get(metric_family, [])
         if metrics:
             cvss_data = metrics[0].get("cvssData", {})
-            severity = metrics[0].get("baseSeverity") or cvss_data.get("baseSeverity")
+            severity = metrics[0].get(
+                "baseSeverity") or cvss_data.get("baseSeverity")
             cvss_score = cvss_data.get("baseScore")
             break
 
@@ -40,7 +42,8 @@ def normalize_cve(item: dict[str, Any]) -> dict[str, Any]:
                 parts = criteria.split(":")
                 vendor = parts[3] if len(parts) > 3 else "unknown"
                 product = parts[4] if len(parts) > 4 else "unknown"
-                version = parts[5] if len(parts) > 5 and parts[5] not in {"*", "-"} else None
+                version = parts[5] if len(parts) > 5 and parts[5] not in {
+                    "*", "-"} else None
                 ranges = [
                     value
                     for key, value in match.items()
@@ -105,7 +108,8 @@ class NvdClient:
                 if response.status_code in {429, 500, 502, 503, 504} and attempt < self.max_retries:
                     retry_after = response.headers.get("Retry-After")
                     try:
-                        delay = min(max(float(retry_after), 0.0), 8.0) if retry_after else 2**attempt
+                        delay = min(max(float(retry_after), 0.0),
+                                    8.0) if retry_after else 2**attempt
                     except ValueError:
                         delay = 2**attempt
                     time.sleep(delay)
@@ -131,5 +135,6 @@ class NvdClient:
 
     def search_cves(self, keyword: str, limit: int = 5) -> list[dict[str, Any]]:
         bounded_limit = min(max(limit, 1), 20)
-        payload = self._get({"keywordSearch": keyword, "resultsPerPage": bounded_limit})
+        payload = self._get(
+            {"keywordSearch": keyword, "resultsPerPage": bounded_limit})
         return [normalize_cve(item) for item in payload.get("vulnerabilities", [])]

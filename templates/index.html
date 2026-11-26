@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>NVD-XRAY | Vulnerability Research</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="NVD-XRAY home">
+      <span class="brand-mark"><i data-lucide="scan-line"></i></span>
+      <span>NVD<span class="brand-accent">-XRAY</span></span>
+    </a>
+    <div class="service-state"><span class="pulse-dot"></span>NVD connected</div>
+  </header>
+
+  <main class="workspace">
+    <aside class="research-rail">
+      <div class="rail-heading">
+        <span class="eyebrow">Research console</span>
+        <h1>Inspect the record.</h1>
+      </div>
+
+      <form id="research-form" novalidate>
+        <div class="segmented" aria-label="Search type">
+          <button type="button" class="segment active" data-mode="cve">CVE ID</button>
+          <button type="button" class="segment" data-mode="keyword">Keyword</button>
+        </div>
+
+        <label for="query">Target</label>
+        <div class="query-field">
+          <i data-lucide="search"></i>
+          <input id="query" name="query" maxlength="300" autocomplete="off" spellcheck="false" placeholder="CVE-2021-44228" required>
+        </div>
+
+        <button id="research-button" class="primary-button" type="submit">
+          <i data-lucide="radar"></i>
+          <span>Run research</span>
+        </button>
+        <p id="form-error" class="form-error" role="alert" hidden></p>
+      </form>
+
+      <section class="recent-section" aria-labelledby="recent-title">
+        <div class="section-label-row">
+          <h2 id="recent-title">Recent targets</h2>
+          <button id="clear-history" class="icon-button" type="button" title="Clear history" aria-label="Clear recent targets"><i data-lucide="trash-2"></i></button>
+        </div>
+        <div id="recent-list" class="recent-list">
+          <p class="empty-history">No recent research</p>
+        </div>
+      </section>
+    </aside>
+
+    <section class="report-stage" aria-live="polite">
+      <div id="empty-state" class="empty-state">
+        <div class="scanner" aria-hidden="true">
+          <span class="scanner-ring ring-one"></span>
+          <span class="scanner-ring ring-two"></span>
+          <i data-lucide="crosshair"></i>
+        </div>
+        <p class="eyebrow">Awaiting target</p>
+        <h2>Evidence first.</h2>
+        <p>Search a CVE identifier or product vulnerability.</p>
+        <button id="sample-query" class="sample-button" type="button">CVE-2021-44228 <i data-lucide="arrow-up-right"></i></button>
+      </div>
+
+      <div id="loading-state" class="loading-state" hidden>
+        <div class="analysis-line"><span></span></div>
+        <p class="eyebrow">Research in progress</p>
+        <h2>Interpreting NVD evidence</h2>
+        <p id="loading-target"></p>
+      </div>
+
+      <article id="report" class="report" hidden>
+        <header class="report-header">
+          <div>
+            <span class="eyebrow">Validated brief</span>
+            <h2 id="report-title"></h2>
+            <div class="report-meta">
+              <span id="severity-badge" class="severity-badge"></span>
+              <span id="score-badge" class="meta-badge"></span>
+              <span class="meta-badge"><i data-lucide="database"></i>NVD</span>
+            </div>
+          </div>
+          <div class="report-actions">
+            <button id="copy-report" class="icon-button" type="button" title="Copy summary" aria-label="Copy report summary"><i data-lucide="copy"></i></button>
+            <button id="download-report" class="icon-button" type="button" title="Export JSON" aria-label="Export report as JSON"><i data-lucide="download"></i></button>
+          </div>
+        </header>
+
+        <section class="report-section summary-section">
+          <h3>Executive summary</h3>
+          <p id="report-summary"></p>
+        </section>
+
+        <section id="matches-section" class="report-section" hidden>
+          <div class="section-label-row">
+            <h3>Matching CVEs</h3>
+            <span id="match-count" class="count-label"></span>
+          </div>
+          <div id="matches-list" class="match-list"></div>
+        </section>
+
+        <section class="report-section">
+          <div class="section-label-row">
+            <h3>Affected products</h3>
+            <span id="product-count" class="count-label"></span>
+          </div>
+          <div id="products-list" class="product-grid"></div>
+        </section>
+
+        <div class="split-sections">
+          <section class="report-section">
+            <h3>Remediation</h3>
+            <ul id="remediation-list" class="check-list"></ul>
+          </section>
+          <section class="report-section">
+            <h3>Security guidance</h3>
+            <ul id="recommendations-list" class="recommendation-list"></ul>
+          </section>
+        </div>
+
+        <section class="report-section limitation-section">
+          <h3><i data-lucide="triangle-alert"></i> Evidence limitations</h3>
+          <ul id="limitations-list"></ul>
+        </section>
+
+        <section class="report-section references-section">
+          <div class="section-label-row">
+            <h3>References</h3>
+            <span id="reference-count" class="count-label"></span>
+          </div>
+          <div id="references-list" class="reference-list"></div>
+        </section>
+      </article>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

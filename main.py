@@ -1,22 +1,26 @@
 import argparse
 import json
-import re
 from typing import Any
 
-from agent import research
-from schemas import VulnerabilityReport
+from reporting import format_report
+from service import ResearchInputError, research_report
 
 
-CVE_PATTERN = re.compile(r"CVE-\d{4}-\d{4,}", re.IGNORECASE)
 MAX_TRACE_RESULT_LENGTH = 6000
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Search NVD and generate a validated vulnerability brief.")
+    parser = argparse.ArgumentParser(
+        description="Research NVD records and produce a concise vulnerability brief.")
     mode = parser.add_mutually_exclusive_group(required=True)
-    mode.add_argument("--cve-id", help="Exact CVE identifier, for example CVE-2021-44228.")
-    mode.add_argument("--query", help="Product or vulnerability keyword search.")
-    parser.add_argument("--hide-trace", action="store_true", help="Do not print model tool calls and tool results.")
+    mode.add_argument(
+        "--cve-id", help="Exact CVE identifier, for example CVE-2021-44228.")
+    mode.add_argument(
+        "--query", help="Product or vulnerability keyword search.")
+    parser.add_argument("--trace", action="store_true",
+                        help="Include tool calls and NVD results for debugging.")
+    parser.add_argument("--json", action="store_true",
+                        help="Print the validated report as JSON.")
     return parser
 
 
@@ -32,33 +36,29 @@ def print_trace(messages: list[Any]) -> None:
             content = str(message.content)
             print(content[:MAX_TRACE_RESULT_LENGTH])
             if len(content) > MAX_TRACE_RESULT_LENGTH:
-                print(f"... [tool result truncated; {len(content)} characters total]")
-
-
-def validated_report(result: dict[str, Any]) -> VulnerabilityReport:
-    response = result.get("structured_response")
-    if isinstance(response, VulnerabilityReport):
-        return response
-    if isinstance(response, dict):
-        return VulnerabilityReport.model_validate(response)
-    raise RuntimeError("The agent did not return a structured response.")
+                print(
+                    f"... [tool result truncated; {len(content)} characters total]")
 
 
 def main() -> int:
     args = build_parser().parse_args()
-    cve_id = args.cve_id.strip() if args.cve_id else ""
-    if cve_id and not CVE_PATTERN.fullmatch(cve_id):
-        print("Invalid CVE identifier. Expected format: CVE-YYYY-NNNN or longer.")
+    query = args.cve_id.strip() if args.cve_id else args.query.strip()
+    try:
+        report, result = research_report(query)
+    except ResearchInputError as exc:
+        print(f"Invalid request: {exc}")
         return 2
+    except Exception as exc:
+        print(f"NVD-XRAY could not complete the research: {exc}")
+        return 1
 
-    query = f"Research exact CVE {cve_id}." if cve_id else f"Search NVD for: {args.query}"
-    result = research(query)
-    if not args.hide_trace:
+    if args.trace:
         print_trace(result.get("messages", []))
 
-    report = validated_report(result)
-    print("\n=== Validated Report ===")
-    print(report.model_dump_json(indent=2))
+    if args.json:
+        print(report.model_dump_json(indent=2))
+    else:
+        print(format_report(report))
     return 0
 
 
