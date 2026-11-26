@@ -85,6 +85,24 @@ def format_report(report: VulnerabilityReport) -> str:
         "No report limitations were identified."]
     lines.extend(f"- {_wrapped(item)}" for item in limitations)
 
+    lines.append(_heading("Public PoCs"))
+    if report.public_pocs:
+        lines.append(f"- PoCIndex matches: {report.public_poc_count}")
+        for poc in report.public_pocs:
+            metadata = []
+            if poc.stars is not None:
+                metadata.append(f"{poc.stars} stars")
+            if poc.pushed_at:
+                metadata.append(f"pushed {poc.pushed_at}")
+            suffix = f" ({', '.join(metadata)})" if metadata else ""
+            lines.append(f"- {poc.source}: {poc.name}{suffix}")
+            lines.append(f"  {poc.url}")
+        if report.poc_index_url:
+            lines.append(f"- Full PoCIndex listing: {report.poc_index_url}")
+        lines.append("- Links are indexed metadata only; NVD-XRAY does not download or execute PoC code.")
+    else:
+        lines.append("- No public PoC metadata was available for this CVE.")
+
     lines.append(_heading("References"))
     if report.references:
         lines.extend(f"- {reference.url}" for reference in report.references)

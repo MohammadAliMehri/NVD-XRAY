@@ -18,7 +18,9 @@ explicitly present in retrieved references or clearly describe it as model guida
 If data is absent or uncertain, record it in limitations. If no record is found,
 return a report that says so without fabricating a CVE. Summarize the vulnerability,
 impact, affected products and versions, remediation, security recommendations,
-and source references, then return the required structured schema.
+and source references, then return the required structured schema. Do not populate
+public_poc_count, public_pocs, or poc_index_url; those fields are enriched separately
+from PoCIndex metadata after report validation.
 The remediation, security_recommendations, and limitations fields must be JSON arrays
 of strings, never JSON encoded as a single string. For keyword searches, populate
 search_results with the bounded returned matches.

@@ -111,6 +111,56 @@ function renderProducts(products) {
     });
 }
 
+function renderPocs(data) {
+    const list = document.querySelector('#pocs-list');
+    const section = document.querySelector('#poc-section');
+    const indexLink = document.querySelector('#poc-index-link');
+    list.replaceChildren();
+    section.hidden = !data.cve_id;
+    indexLink.hidden = !data.poc_index_url;
+    if (data.poc_index_url) indexLink.href = data.poc_index_url;
+    if (!data.public_pocs.length) {
+        const empty = document.createElement('p');
+        empty.className = 'reference-empty';
+        empty.textContent = data.cve_id
+            ? 'No public PoC metadata was returned by PoCIndex for this CVE.'
+            : 'Public PoC lookup is available for exact CVE searches.';
+        list.append(empty);
+        return;
+    }
+
+    const count = document.createElement('div');
+    count.className = 'poc-count';
+    count.textContent = `${data.public_poc_count.toLocaleString()} indexed matches · showing ${data.public_pocs.length}`;
+    list.append(count);
+    data.public_pocs.forEach((poc) => {
+        const link = document.createElement('a');
+        link.className = 'poc-item';
+        link.href = poc.url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+
+        const title = document.createElement('div');
+        title.className = 'poc-title';
+        const sourceIcon = document.createElement('i');
+        sourceIcon.dataset.lucide = 'github';
+        const name = document.createElement('span');
+        name.textContent = poc.name;
+        const externalIcon = document.createElement('i');
+        externalIcon.dataset.lucide = 'external-link';
+        title.append(sourceIcon, name, externalIcon);
+
+        const metadata = document.createElement('div');
+        metadata.className = 'poc-metadata';
+        const values = [poc.source];
+        if (poc.stars != null) values.push(`${poc.stars.toLocaleString()} stars`);
+        if (poc.pushed_at) values.push(`pushed ${poc.pushed_at}`);
+        metadata.textContent = values.join(' · ');
+        link.append(title, metadata);
+        list.append(link);
+    });
+}
+
 function renderReferences(references) {
     const list = document.querySelector('#references-list');
     list.replaceChildren();
@@ -152,6 +202,7 @@ function renderReport(data) {
     addList('#remediation-list', data.remediation, 'No NVD-confirmed remediation was supplied.');
     addList('#recommendations-list', data.security_recommendations, 'No additional defensive guidance was supplied.');
     addList('#limitations-list', data.limitations, 'No report limitations were identified.');
+    renderPocs(data);
     renderReferences(data.references || []);
     emptyState.hidden = true;
     loadingState.hidden = true;

@@ -22,6 +22,14 @@ class SearchMatch(BaseModel):
     cvss_score: float | None = None
 
 
+class PublicPoc(BaseModel):
+    name: str
+    url: HttpUrl
+    source: str
+    stars: int | None = None
+    pushed_at: str | None = None
+
+
 class VulnerabilityReport(BaseModel):
     cve_id: str | None = None
     summary: str
@@ -32,5 +40,8 @@ class VulnerabilityReport(BaseModel):
     security_recommendations: list[str] = Field(default_factory=list)
     references: list[Reference] = Field(default_factory=list)
     data_source: Literal["NVD"] = "NVD"
+    public_poc_count: int = 0
+    public_pocs: list[PublicPoc] = Field(default_factory=list)
+    poc_index_url: HttpUrl | None = None
     limitations: list[str] = Field(default_factory=list)
     search_results: list[SearchMatch] = Field(default_factory=list)

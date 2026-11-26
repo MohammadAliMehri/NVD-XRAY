@@ -8,6 +8,8 @@ NVD-XRAY is a production-oriented vulnerability research console for NVD CVE API
 - Display severity, CVSS, affected products, remediation, security guidance, limitations, and references.
 - Keep NVD evidence separate from model-generated defensive guidance.
 - Preserve unknown values instead of fabricating scores, versions, or patches.
+- Match exact CVE records with public PoC metadata from PoCIndex.
+- Show a bounded set of PoC repository/reference links without downloading or executing code.
 - Export validated reports as JSON from the web console.
 - Retry bounded NVD timeout, rate-limit, and transient server failures.
 
@@ -58,6 +60,8 @@ NVIDIA_MODEL=nvidia/nemotron-3.5-super-vl-120b-a12b
 NVIDIA_TIMEOUT_SECONDS=60
 NVD_API_KEY=
 NVD_TIMEOUT_SECONDS=20
+POCINDEX_TIMEOUT_SECONDS=15
+POCINDEX_RESULT_LIMIT=6
 FLASK_HOST=127.0.0.1
 FLASK_PORT=5000
 FLASK_DEBUG=false

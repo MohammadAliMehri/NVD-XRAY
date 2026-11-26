@@ -1,10 +1,12 @@
+import os
 import re
 from typing import Any
 
 from pydantic import ValidationError
 
 from agent import research
-from schemas import VulnerabilityReport
+from pocindex_client import PocIndexClient, PocIndexError
+from schemas import PublicPoc, VulnerabilityReport
 
 
 CVE_PATTERN = re.compile(r"CVE-\d{4}-\d{4,}", re.IGNORECASE)
@@ -42,7 +44,31 @@ def research_report(query: str) -> tuple[VulnerabilityReport, dict[str, Any]]:
     )
     try:
         result = research(prompt)
-        return validated_report(result), result
+        report = validated_report(result)
     except ValidationError as exc:
         raise RuntimeError(
             "The model response did not match the vulnerability report schema.") from exc
+
+    if report.cve_id:
+        try:
+            poc_data = PocIndexClient(
+                timeout=float(os.getenv("POCINDEX_TIMEOUT_SECONDS", "15")),
+                limit=int(os.getenv("POCINDEX_RESULT_LIMIT", "6")),
+            ).get_public_pocs(report.cve_id)
+            report = report.model_copy(
+                update={
+                    "public_poc_count": poc_data["total_count"],
+                    "public_pocs": [
+                        PublicPoc.model_validate(item) for item in poc_data["items"]
+                    ],
+                    "poc_index_url": poc_data["index_url"],
+                }
+            )
+        except (PocIndexError, ValueError):
+            limitations = [*report.limitations]
+            limitations.append(
+                "Public PoC availability could not be retrieved from PoCIndex; retry later."
+            )
+            report = report.model_copy(update={"limitations": limitations})
+
+    return report, result
