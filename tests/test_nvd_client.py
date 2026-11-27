@@ -47,9 +47,12 @@ class NvdClientTests(unittest.TestCase):
         record = {
             "affected_products": [{"vendor": "v", "product": str(i)} for i in range(3)],
             "references": [
-                {"url": "https://example.com/general", "tags": ["Release Notes"]},
-                {"url": "https://example.com/vendor", "tags": ["Vendor Advisory"]},
-                {"url": "https://example.com/vendor", "tags": ["Vendor Advisory"]},
+                {"url": "https://example.com/general",
+                    "tags": ["Release Notes"]},
+                {"url": "https://example.com/vendor",
+                    "tags": ["Vendor Advisory"]},
+                {"url": "https://example.com/vendor",
+                    "tags": ["Vendor Advisory"]},
                 {"url": "https://example.com/patch", "tags": ["Patch"]},
             ],
         }
@@ -58,7 +61,8 @@ class NvdClientTests(unittest.TestCase):
         urls = [reference["url"] for reference in compacted["references"]]
 
         self.assertEqual(len(compacted["affected_products"]), 2)
-        self.assertEqual(urls, ["https://example.com/vendor", "https://example.com/patch"])
+        self.assertEqual(
+            urls, ["https://example.com/vendor", "https://example.com/patch"])
         self.assertTrue(compacted["evidence_truncated"])
 
 

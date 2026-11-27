@@ -809,7 +809,7 @@ label {
     border: 1px solid var(--line);
 }
 
-.evidence-grid > div {
+.evidence-grid>div {
     min-width: 0;
     padding: 12px 14px;
     background: var(--surface);
@@ -1072,7 +1072,7 @@ label {
         gap: 0;
     }
 
-    .impact-section > div + div {
+    .impact-section>div+div {
         margin-top: 24px;
     }
 

@@ -45,7 +45,8 @@ def create_chat_model() -> ChatOpenAI:
 
 def check_local_model_ready() -> dict[str, object]:
     load_dotenv()
-    base_url = os.getenv("LLM_BASE_URL", "http://127.0.0.1:1234/v1").rstrip("/")
+    base_url = os.getenv(
+        "LLM_BASE_URL", "http://127.0.0.1:1234/v1").rstrip("/")
     model_name = os.getenv("LLM_MODEL", "spark-x2.6-4b-uncensored")
     response = httpx.get(f"{base_url}/models", timeout=5)
     response.raise_for_status()

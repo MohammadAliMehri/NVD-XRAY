@@ -71,7 +71,8 @@ class WebAppTests(unittest.TestCase):
     @patch("app.answer_report_question", return_value="Upgrade to the fixed release.")
     @patch("app.research_report")
     def test_chat_uses_cached_report(self, mock_research, mock_answer):
-        report = VulnerabilityReport(cve_id="CVE-2026-1234", summary="Verified summary.")
+        report = VulnerabilityReport(
+            cve_id="CVE-2026-1234", summary="Verified summary.")
         mock_research.return_value = (report, {})
         research_response = self.client.post(
             "/api/research", json={"query": "CVE-2026-1234"}
@@ -80,12 +81,15 @@ class WebAppTests(unittest.TestCase):
 
         response = self.client.post(
             "/api/chat",
-            json={"report_id": report_id, "question": "How should I remediate it?"},
+            json={"report_id": report_id,
+                  "question": "How should I remediate it?"},
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json()["answer"], "Upgrade to the fixed release.")
-        mock_answer.assert_called_once_with(report, "How should I remediate it?")
+        self.assertEqual(response.get_json()[
+                         "answer"], "Upgrade to the fixed release.")
+        mock_answer.assert_called_once_with(
+            report, "How should I remediate it?")
 
     def test_chat_rejects_unknown_report(self):
         response = self.client.post(

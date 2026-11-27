@@ -79,7 +79,8 @@ class PocIndexTests(unittest.TestCase):
         }
         result = {
             "messages": [
-                SimpleNamespace(name="get_cve_details", content=json.dumps(evidence))
+                SimpleNamespace(name="get_cve_details",
+                                content=json.dumps(evidence))
             ]
         }
 
@@ -88,7 +89,8 @@ class PocIndexTests(unittest.TestCase):
         self.assertEqual(hydrated.severity, "CRITICAL")
         self.assertEqual(hydrated.cvss_score, 9.8)
         self.assertEqual(hydrated.affected_product_total, 8)
-        self.assertTrue(any("bounded sample" in item for item in hydrated.limitations))
+        self.assertTrue(
+            any("bounded sample" in item for item in hydrated.limitations))
 
 
 if __name__ == "__main__":

@@ -50,14 +50,16 @@ def format_report(report: VulnerabilityReport) -> str:
         _wrapped(report.summary),
         _heading("Impact & Exposure"),
         _wrapped(report.impact or "Impact analysis was not available in the report."),
-        _wrapped(report.attack_surface or "Attack-surface details were not available in the report."),
+        _wrapped(
+            report.attack_surface or "Attack-surface details were not available in the report."),
     ]
 
     products = compact_products(report.affected_products)
     lines.append(_heading("Affected Products"))
     if products:
         total = report.affected_product_total or len(report.affected_products)
-        lines.append(f"- Source records: {total}; model sample: {len(report.affected_products)}")
+        lines.append(
+            f"- Source records: {total}; model sample: {len(report.affected_products)}")
         for item in products[:20]:
             versions = ", ".join(
                 item.affected_versions) or "Version applicability unknown"
@@ -113,7 +115,8 @@ def format_report(report: VulnerabilityReport) -> str:
 
     lines.append(_heading("References"))
     if report.reference_total:
-        lines.append(f"- Source references: {report.reference_total}; report sample: {len(report.references)}")
+        lines.append(
+            f"- Source references: {report.reference_total}; report sample: {len(report.references)}")
     if report.references:
         lines.extend(f"- {reference.url}" for reference in report.references)
     else:

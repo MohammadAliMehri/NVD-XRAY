@@ -20,7 +20,8 @@ MAX_CHAT_QUESTION_LENGTH = 1200
 def create_app() -> Flask:
     app = Flask(__name__)
     app.config["JSON_SORT_KEYS"] = False
-    report_cache: OrderedDict[str, tuple[float, VulnerabilityReport]] = OrderedDict()
+    report_cache: OrderedDict[str, tuple[float,
+                                         VulnerabilityReport]] = OrderedDict()
     cache_lock = threading.Lock()
 
     def cache_report(report: VulnerabilityReport) -> str:
@@ -104,7 +105,8 @@ def create_app() -> Flask:
         try:
             model_status = check_local_model_ready()
         except Exception:
-            app.logger.warning("LM Studio readiness check failed", exc_info=True)
+            app.logger.warning(
+                "LM Studio readiness check failed", exc_info=True)
             return jsonify({"status": "not-ready", "model": "unavailable"}), 503
         return jsonify({"status": "ready" if model_status["ready"] else "not-ready", **model_status}), 200 if model_status["ready"] else 503
 
