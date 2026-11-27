@@ -107,6 +107,16 @@ a:focus-visible {
     box-shadow: 0 0 0 5px rgba(8, 127, 120, 0.12);
 }
 
+.pulse-dot.checking {
+    background: var(--yellow);
+    box-shadow: 0 0 0 5px rgba(155, 103, 16, 0.12);
+}
+
+.pulse-dot.offline {
+    background: var(--red);
+    box-shadow: 0 0 0 5px rgba(189, 44, 44, 0.12);
+}
+
 .workspace {
     min-height: calc(100vh - 72px);
     display: grid;
@@ -583,7 +593,7 @@ label {
     gap: 48px;
 }
 
-.split-sections > .report-section {
+.split-sections>.report-section {
     min-width: 0;
 }
 
@@ -790,6 +800,177 @@ label {
     font-size: 14px;
 }
 
+.evidence-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    margin-top: 24px;
+    background: var(--line);
+    border: 1px solid var(--line);
+}
+
+.evidence-grid > div {
+    min-width: 0;
+    padding: 12px 14px;
+    background: var(--surface);
+}
+
+.evidence-grid span {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.evidence-grid strong {
+    font: 600 13px "Space Grotesk", sans-serif;
+}
+
+.impact-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 44px;
+}
+
+.impact-section p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.6;
+}
+
+.chat-toggle {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 40;
+    width: 52px;
+    height: 52px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--ink);
+    color: white;
+    background: var(--orange);
+    box-shadow: 0 10px 30px rgba(23, 25, 22, 0.22);
+}
+
+.chat-toggle:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+.chat-toggle svg {
+    width: 22px;
+}
+
+.chat-panel {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 45;
+    width: min(390px, calc(100vw - 36px));
+    height: min(620px, calc(100vh - 90px));
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    border: 1px solid var(--ink);
+    background: var(--surface);
+    box-shadow: 0 22px 70px rgba(23, 25, 22, 0.24);
+}
+
+.chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--line);
+}
+
+.chat-header .eyebrow {
+    margin-bottom: 4px;
+}
+
+.chat-header h2 {
+    margin: 0;
+    font: 600 15px "Space Grotesk", sans-serif;
+}
+
+.chat-messages {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    padding: 18px;
+    background-image: linear-gradient(rgba(23, 25, 22, 0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(23, 25, 22, 0.025) 1px, transparent 1px);
+    background-size: 24px 24px;
+}
+
+.chat-message {
+    max-width: 88%;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.assistant-message {
+    align-self: flex-start;
+    background: var(--surface);
+}
+
+.user-message {
+    align-self: flex-end;
+    color: white;
+    border-color: var(--ink);
+    background: var(--ink);
+}
+
+.chat-error {
+    color: var(--red);
+    border-color: rgba(189, 44, 44, 0.3);
+}
+
+.chat-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 38px;
+    gap: 8px;
+    padding: 12px;
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+}
+
+.chat-form input {
+    min-width: 0;
+    border: 1px solid var(--line);
+    padding: 0 11px;
+    background: var(--paper);
+}
+
+.chat-send {
+    width: 38px;
+    height: 38px;
+    color: white;
+    border-color: var(--orange);
+    background: var(--orange);
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 .toast {
     position: fixed;
     right: 24px;
@@ -885,9 +1066,30 @@ label {
         overflow-wrap: anywhere;
     }
 
-    .split-sections {
+    .split-sections,
+    .impact-section {
         grid-template-columns: 1fr;
         gap: 0;
+    }
+
+    .impact-section > div + div {
+        margin-top: 24px;
+    }
+
+    .evidence-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chat-toggle {
+        right: 18px;
+        bottom: 18px;
+    }
+
+    .chat-panel {
+        right: 12px;
+        bottom: 12px;
+        width: calc(100vw - 24px);
+        height: min(650px, calc(100vh - 24px));
     }
 
     .summary-section p {

@@ -1,7 +1,9 @@
 import unittest
+from unittest.mock import patch
 
 from nvd_client import normalize_cve
 from schemas import VulnerabilityReport
+from tools import compact_for_model
 
 
 class NvdClientTests(unittest.TestCase):
@@ -36,6 +38,28 @@ class NvdClientTests(unittest.TestCase):
         )
 
         self.assertEqual(report.search_results[0].cve_id, "CVE-2021-44228")
+
+    @patch.dict(
+        "os.environ",
+        {"NVD_MODEL_PRODUCT_LIMIT": "2", "NVD_MODEL_REFERENCE_LIMIT": "2"},
+    )
+    def test_compact_for_model_prioritizes_unique_vendor_references(self):
+        record = {
+            "affected_products": [{"vendor": "v", "product": str(i)} for i in range(3)],
+            "references": [
+                {"url": "https://example.com/general", "tags": ["Release Notes"]},
+                {"url": "https://example.com/vendor", "tags": ["Vendor Advisory"]},
+                {"url": "https://example.com/vendor", "tags": ["Vendor Advisory"]},
+                {"url": "https://example.com/patch", "tags": ["Patch"]},
+            ],
+        }
+
+        compacted = compact_for_model(record)
+        urls = [reference["url"] for reference in compacted["references"]]
+
+        self.assertEqual(len(compacted["affected_products"]), 2)
+        self.assertEqual(urls, ["https://example.com/vendor", "https://example.com/patch"])
+        self.assertTrue(compacted["evidence_truncated"])
 
 
 if __name__ == "__main__":

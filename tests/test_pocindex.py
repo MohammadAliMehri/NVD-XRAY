@@ -1,9 +1,11 @@
+import json
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from pocindex_client import parse_pocindex_html
 from schemas import VulnerabilityReport
-from service import research_report
+from service import hydrate_nvd_evidence, research_report
 
 
 SAMPLE_HTML = """
@@ -55,7 +57,38 @@ class PocIndexTests(unittest.TestCase):
 
         self.assertEqual(report.public_poc_count, 2)
         self.assertEqual(report.public_pocs[0].name, "example/public-poc")
-        self.assertEqual(str(report.poc_index_url), "https://pocindex.io/CVE-2026-1234")
+        self.assertEqual(str(report.poc_index_url),
+                         "https://pocindex.io/CVE-2026-1234")
+
+    def test_hydrates_deterministic_nvd_metadata(self):
+        report = VulnerabilityReport(
+            cve_id="CVE-2026-1234",
+            summary="Model summary.",
+            severity="LOW",
+            cvss_score=2.0,
+        )
+        evidence = {
+            "cve_id": "CVE-2026-1234",
+            "severity": "CRITICAL",
+            "cvss_score": 9.8,
+            "published": "2026-01-01",
+            "last_modified": "2026-01-05",
+            "affected_product_total": 8,
+            "reference_total": 3,
+            "evidence_truncated": True,
+        }
+        result = {
+            "messages": [
+                SimpleNamespace(name="get_cve_details", content=json.dumps(evidence))
+            ]
+        }
+
+        hydrated = hydrate_nvd_evidence(report, result)
+
+        self.assertEqual(hydrated.severity, "CRITICAL")
+        self.assertEqual(hydrated.cvss_score, 9.8)
+        self.assertEqual(hydrated.affected_product_total, 8)
+        self.assertTrue(any("bounded sample" in item for item in hydrated.limitations))
 
 
 if __name__ == "__main__":

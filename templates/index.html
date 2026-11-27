@@ -16,7 +16,7 @@
       <span class="brand-mark"><i data-lucide="scan-line"></i></span>
       <span>NVD<span class="brand-accent">-XRAY</span></span>
     </a>
-    <div class="service-state"><span class="pulse-dot"></span>NVD connected</div>
+    <div id="model-state" class="service-state"><span class="pulse-dot checking"></span>Checking local model</div>
   </header>
 
   <main class="workspace">
@@ -96,6 +96,22 @@
         <section class="report-section summary-section">
           <h3>Executive summary</h3>
           <p id="report-summary"></p>
+          <div class="evidence-grid">
+            <div><span>Confidence</span><strong id="report-confidence"></strong></div>
+            <div><span>Published</span><strong id="report-published"></strong></div>
+            <div><span>Updated</span><strong id="report-updated"></strong></div>
+          </div>
+        </section>
+
+        <section class="report-section impact-section">
+          <div>
+            <h3>Impact</h3>
+            <p id="report-impact"></p>
+          </div>
+          <div>
+            <h3>Attack surface</h3>
+            <p id="report-attack-surface"></p>
+          </div>
         </section>
 
         <section id="matches-section" class="report-section" hidden>
@@ -152,6 +168,25 @@
       </article>
     </section>
   </main>
+
+  <button id="chat-toggle" class="chat-toggle" type="button" title="Ask about this report" aria-label="Open report assistant" disabled><i data-lucide="message-square-text"></i></button>
+  <aside id="chat-panel" class="chat-panel" aria-label="CVE report assistant" hidden>
+    <header class="chat-header">
+      <div>
+        <span class="eyebrow">Report assistant</span>
+        <h2 id="chat-context">Run a CVE search</h2>
+      </div>
+      <button id="chat-close" class="icon-button" type="button" aria-label="Close report assistant"><i data-lucide="x"></i></button>
+    </header>
+    <div id="chat-messages" class="chat-messages" aria-live="polite">
+      <div class="chat-message assistant-message">Research a CVE, then ask me about its impact, versions, remediation, or public PoC evidence.</div>
+    </div>
+    <form id="chat-form" class="chat-form">
+      <label class="sr-only" for="chat-question">Question about the current report</label>
+      <input id="chat-question" maxlength="1200" autocomplete="off" placeholder="Ask about this CVE..." required>
+      <button class="icon-button chat-send" type="submit" aria-label="Send question"><i data-lucide="send"></i></button>
+    </form>
+  </aside>
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>

@@ -1,3 +1,4 @@
+import json
 import os
 import re
 from typing import Any
@@ -26,6 +27,42 @@ def validated_report(result: dict[str, Any]) -> VulnerabilityReport:
     raise RuntimeError("The agent did not return a structured response.")
 
 
+def hydrate_nvd_evidence(
+    report: VulnerabilityReport, result: dict[str, Any]
+) -> VulnerabilityReport:
+    for message in result.get("messages", []):
+        if getattr(message, "name", None) != "get_cve_details":
+            continue
+        try:
+            evidence = json.loads(str(message.content))
+        except (json.JSONDecodeError, TypeError):
+            continue
+        if evidence.get("found") is False:
+            continue
+
+        limitations = list(report.limitations)
+        if evidence.get("evidence_truncated"):
+            limitations.append(
+                "The model received a bounded sample of affected products and references; full totals are shown."
+            )
+        updates = {
+            "cve_id": evidence.get("cve_id") or report.cve_id,
+            "severity": evidence.get("severity") or report.severity,
+            "cvss_score": evidence.get("cvss_score")
+            if evidence.get("cvss_score") is not None
+            else report.cvss_score,
+            "published": evidence.get("published") or report.published,
+            "last_modified": evidence.get("last_modified") or report.last_modified,
+            "affected_product_total": evidence.get("affected_product_total", 0)
+            or len(report.affected_products),
+            "reference_total": evidence.get("reference_total", 0)
+            or len(report.references),
+            "limitations": list(dict.fromkeys(limitations)),
+        }
+        return report.model_copy(update=updates)
+    return report
+
+
 def research_report(query: str) -> tuple[VulnerabilityReport, dict[str, Any]]:
     cleaned = query.strip()
     if not cleaned:
@@ -49,6 +86,7 @@ def research_report(query: str) -> tuple[VulnerabilityReport, dict[str, Any]]:
         raise RuntimeError(
             "The model response did not match the vulnerability report schema.") from exc
 
+    report = hydrate_nvd_evidence(report, result)
     if report.cve_id:
         try:
             poc_data = PocIndexClient(

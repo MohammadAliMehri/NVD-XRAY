@@ -9,6 +9,7 @@ const report = document.querySelector('#report');
 const toast = document.querySelector('#toast');
 let activeMode = 'cve';
 let activeReport = null;
+let activeReportId = null;
 
 const historyKey = 'nvd-xray-recent';
 const getHistory = () => {
@@ -21,6 +22,21 @@ const getHistory = () => {
 
 function setText(selector, value) {
     document.querySelector(selector).textContent = value;
+}
+
+async function loadReadiness() {
+    const state = document.querySelector('#model-state');
+    const dot = state.querySelector('.pulse-dot');
+    try {
+        const response = await fetch('/ready');
+        const payload = await response.json();
+        if (!response.ok || !payload.ready) throw new Error('Model unavailable');
+        state.lastChild.textContent = `${payload.model} ready`;
+        dot.className = 'pulse-dot';
+    } catch {
+        state.lastChild.textContent = 'Local model offline';
+        dot.className = 'pulse-dot offline';
+    }
 }
 
 function setMode(mode) {
@@ -187,11 +203,19 @@ function renderReferences(references) {
     });
 }
 
-function renderReport(data) {
+function renderReport(data, reportId) {
     activeReport = data;
+    activeReportId = reportId || null;
     const title = data.cve_id || 'Keyword research';
     setText('#report-title', title);
     setText('#report-summary', data.summary);
+    setText('#report-impact', data.impact || 'Impact details were not supplied in the validated evidence.');
+    setText('#report-attack-surface', data.attack_surface || 'Attack-surface details were not supplied in the validated evidence.');
+    setText('#report-confidence', (data.confidence || 'medium').toUpperCase());
+    setText('#report-published', data.published ? data.published.slice(0, 10) : 'Unknown');
+    setText('#report-updated', data.last_modified ? data.last_modified.slice(0, 10) : 'Unknown');
+    setText('#chat-context', title);
+    document.querySelector('#chat-toggle').disabled = !activeReportId;
     const severity = (data.severity || 'UNKNOWN').toUpperCase();
     const badge = document.querySelector('#severity-badge');
     badge.textContent = severity;
@@ -199,6 +223,12 @@ function renderReport(data) {
     setText('#score-badge', `CVSS ${data.cvss_score == null ? 'Unknown' : data.cvss_score}`);
     renderMatches(data.search_results || []);
     renderProducts(data.affected_products || []);
+    if (data.affected_product_total > data.affected_products.length) {
+        setText('#product-count', `${data.affected_products.length} shown · ${data.affected_product_total} total`);
+    }
+    if (data.reference_total > data.references.length) {
+        setText('#reference-count', `${data.references.length} shown · ${data.reference_total} total`);
+    }
     addList('#remediation-list', data.remediation, 'No NVD-confirmed remediation was supplied.');
     addList('#recommendations-list', data.security_recommendations, 'No additional defensive guidance was supplied.');
     addList('#limitations-list', data.limitations, 'No report limitations were identified.');
@@ -256,7 +286,7 @@ async function runResearch(query) {
         });
         const payload = await response.json();
         if (!response.ok) throw new Error(payload.error || 'Research failed.');
-        renderReport(payload.report);
+        renderReport(payload.report, payload.report_id);
         saveHistory(query);
     } catch (error) {
         formError.textContent = error.message;
@@ -277,6 +307,56 @@ form.addEventListener('submit', (event) => {
         return;
     }
     runResearch(query);
+});
+
+function appendChatMessage(text, role) {
+    const messages = document.querySelector('#chat-messages');
+    const message = document.createElement('div');
+    message.className = `chat-message ${role === 'user' ? 'user-message' : 'assistant-message'}`;
+    message.textContent = text;
+    messages.append(message);
+    messages.scrollTop = messages.scrollHeight;
+}
+
+function setChatOpen(open) {
+    document.querySelector('#chat-panel').hidden = !open;
+    document.querySelector('#chat-toggle').hidden = open;
+    if (open) document.querySelector('#chat-question').focus();
+}
+
+document.querySelector('#chat-toggle').addEventListener('click', () => setChatOpen(true));
+document.querySelector('#chat-close').addEventListener('click', () => setChatOpen(false));
+document.querySelector('#chat-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!activeReportId) return;
+    const input = document.querySelector('#chat-question');
+    const sendButton = event.currentTarget.querySelector('button');
+    const question = input.value.trim();
+    if (!question) return;
+    appendChatMessage(question, 'user');
+    input.value = '';
+    input.disabled = true;
+    sendButton.disabled = true;
+    appendChatMessage('Reading the validated report...', 'assistant');
+    const pendingMessage = document.querySelector('#chat-messages').lastElementChild;
+    try {
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ report_id: activeReportId, question }),
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || 'Unable to answer this question.');
+        pendingMessage.textContent = payload.answer;
+    } catch (error) {
+        pendingMessage.textContent = error.message;
+        pendingMessage.classList.add('chat-error');
+    } finally {
+        input.disabled = false;
+        sendButton.disabled = false;
+        input.focus();
+        document.querySelector('#chat-messages').scrollTop = document.querySelector('#chat-messages').scrollHeight;
+    }
 });
 
 document.querySelectorAll('.segment').forEach((button) => {
@@ -312,4 +392,5 @@ document.querySelector('#download-report').addEventListener('click', () => {
 });
 
 renderHistory();
+loadReadiness();
 if (window.lucide) window.lucide.createIcons();

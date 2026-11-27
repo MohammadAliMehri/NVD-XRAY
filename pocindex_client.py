@@ -55,7 +55,8 @@ class _PocIndexParser(HTMLParser):
             is_poc_heading = heading.lower().startswith("proof-of-concept exploits")
             if is_poc_heading:
                 match = COUNT_PATTERN.search(heading)
-                self.total_count = int(match.group(1).replace(",", "")) if match else 0
+                self.total_count = int(match.group(
+                    1).replace(",", "")) if match else 0
                 self._in_poc_section = True
             elif self._in_poc_section:
                 self._in_poc_section = False
@@ -76,12 +77,14 @@ class _PocIndexParser(HTMLParser):
             if self._current_item:
                 metadata = METADATA_PATTERN.search(text)
                 if metadata:
-                    self._current_item["stars"] = int(metadata.group(1).replace(",", ""))
+                    self._current_item["stars"] = int(
+                        metadata.group(1).replace(",", ""))
                     self._current_item["pushed_at"] = metadata.group(2)
                 else:
                     self._current_item["stars"] = None
                     self._current_item["pushed_at"] = None
-                self._current_item["source"] = _source_name(self._current_item["url"])
+                self._current_item["source"] = _source_name(
+                    self._current_item["url"])
                 self.items.append(self._current_item)
             self._capture_item = False
             self._current_item = None
@@ -123,7 +126,8 @@ class PocIndexClient:
     def get_public_pocs(self, cve_id: str) -> dict[str, Any]:
         normalized = cve_id.strip().upper()
         if not CVE_PATTERN.fullmatch(normalized):
-            raise ValueError("A valid CVE identifier is required for PoCIndex lookup.")
+            raise ValueError(
+                "A valid CVE identifier is required for PoCIndex lookup.")
 
         page_url = f"{POCINDEX_BASE_URL}/{normalized}"
         try:
@@ -131,7 +135,8 @@ class PocIndexClient:
                 page_url,
                 timeout=self.timeout,
                 follow_redirects=True,
-                headers={"User-Agent": "NVD-XRAY/1.0 (+https://github.com/MohammadAliMehri/NVD-XRAY)"},
+                headers={
+                    "User-Agent": "NVD-XRAY/1.0 (+https://github.com/MohammadAliMehri/NVD-XRAY)"},
             )
             response.raise_for_status()
         except httpx.HTTPError as exc:

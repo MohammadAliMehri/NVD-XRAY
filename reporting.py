@@ -43,14 +43,21 @@ def format_report(report: VulnerabilityReport) -> str:
         "NVD-XRAY Vulnerability Brief",
         "=" * 28,
         f"Target: {title}",
-        f"Severity: {severity}  |  CVSS: {score}  |  Source: {report.data_source}",
+        f"Severity: {severity}  |  CVSS: {score}  |  Confidence: {report.confidence.upper()}",
+        f"Published: {report.published or 'Unknown'}  |  Updated: {report.last_modified or 'Unknown'}",
+        f"Evidence source: {report.data_source}",
         _heading("Executive Summary"),
         _wrapped(report.summary),
+        _heading("Impact & Exposure"),
+        _wrapped(report.impact or "Impact analysis was not available in the report."),
+        _wrapped(report.attack_surface or "Attack-surface details were not available in the report."),
     ]
 
     products = compact_products(report.affected_products)
     lines.append(_heading("Affected Products"))
     if products:
+        total = report.affected_product_total or len(report.affected_products)
+        lines.append(f"- Source records: {total}; model sample: {len(report.affected_products)}")
         for item in products[:20]:
             versions = ", ".join(
                 item.affected_versions) or "Version applicability unknown"
@@ -99,11 +106,14 @@ def format_report(report: VulnerabilityReport) -> str:
             lines.append(f"  {poc.url}")
         if report.poc_index_url:
             lines.append(f"- Full PoCIndex listing: {report.poc_index_url}")
-        lines.append("- Links are indexed metadata only; NVD-XRAY does not download or execute PoC code.")
+        lines.append(
+            "- Links are indexed metadata only; NVD-XRAY does not download or execute PoC code.")
     else:
         lines.append("- No public PoC metadata was available for this CVE.")
 
     lines.append(_heading("References"))
+    if report.reference_total:
+        lines.append(f"- Source references: {report.reference_total}; report sample: {len(report.references)}")
     if report.references:
         lines.extend(f"- {reference.url}" for reference in report.references)
     else:

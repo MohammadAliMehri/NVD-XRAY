@@ -33,9 +33,16 @@ class PublicPoc(BaseModel):
 class VulnerabilityReport(BaseModel):
     cve_id: str | None = None
     summary: str
+    impact: str | None = None
+    attack_surface: str | None = None
+    confidence: Literal["high", "medium", "low"] = "medium"
+    published: str | None = None
+    last_modified: str | None = None
     severity: str | None = None
     cvss_score: float | None = None
     affected_products: list[AffectedProduct] = Field(default_factory=list)
+    affected_product_total: int = 0
+    reference_total: int = 0
     remediation: list[str] = Field(default_factory=list)
     security_recommendations: list[str] = Field(default_factory=list)
     references: list[Reference] = Field(default_factory=list)

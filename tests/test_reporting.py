@@ -26,6 +26,10 @@ class ReportingTests(unittest.TestCase):
             summary="A verified example vulnerability.",
             severity="HIGH",
             cvss_score=8.1,
+            impact="Remote code execution is possible.",
+            attack_surface="Network-exposed services.",
+            confidence="high",
+            published="2026-01-01",
             limitations=["Version ranges were not supplied."],
         )
 
@@ -34,6 +38,9 @@ class ReportingTests(unittest.TestCase):
         self.assertIn("NVD-XRAY Vulnerability Brief", output)
         self.assertIn("Executive Summary", output)
         self.assertIn("CVSS: 8.1", output)
+        self.assertIn("Impact & Exposure", output)
+        self.assertIn("Remote code execution is possible.", output)
+        self.assertIn("Published: 2026-01-01", output)
         self.assertIn("Version ranges were not supplied.", output)
 
 
