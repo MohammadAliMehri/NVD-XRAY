@@ -2,7 +2,35 @@
 
 NVD-XRAY is a production-oriented vulnerability research console for NVD CVE API 2.0. It provides a responsive Flask web interface, concise reports, and a report-grounded chatbot backed by NVIDIA's OpenAI-compatible API and Pydantic validation.
 
-![NVD-XRAY web console showing a validated CVE report](docs/nvd-xray-web-ui.png)
+## Preview
+
+### Research Console
+
+![NVD-XRAY research console](docs/1.png)
+
+### CVE Report Overview
+
+![Validated CVE report with severity, confidence, impact, and affected products](docs/2.png)
+
+### Products, Remediation, and Public PoCs
+
+![Affected products, remediation guidance, security recommendations, and PoCIndex results](docs/3.png)
+
+### PoC and Evidence Review
+
+![PoCIndex matches and evidence limitations](docs/4.png)
+
+### References
+
+![NVD report references](docs/5.png)
+
+### Report Assistant
+
+![Report assistant ready for questions about the current CVE](docs/6.png)
+
+### Grounded CVE Answers
+
+![Report-grounded chatbot answer with remediation guidance](docs/7.png)
 
 ## Capabilities
 
