@@ -34,21 +34,25 @@ step-by-step offensive execution instructions.
 def create_chat_model() -> ChatOpenAI:
     load_dotenv()
     return ChatOpenAI(
-        model=os.getenv("LLM_MODEL", "spark-x2.6-4b-uncensored"),
-        api_key=os.getenv("LLM_API_KEY", "lm-studio"),
-        base_url=os.getenv("LLM_BASE_URL", "http://127.0.0.1:1234/v1"),
+        model=os.getenv("LLM_MODEL", "nvidia/nemotron-3.5-super-vl-120b-a12b"),
+        api_key=os.getenv("LLM_API_KEY"),
+        base_url=os.getenv(
+            "LLM_BASE_URL", "https://integrate.api.nvidia.com/v1"),
         temperature=0,
         timeout=float(os.getenv("LLM_TIMEOUT_SECONDS", "120")),
         max_retries=1,
     )
 
 
-def check_local_model_ready() -> dict[str, object]:
+def check_model_ready() -> dict[str, object]:
     load_dotenv()
     base_url = os.getenv(
-        "LLM_BASE_URL", "http://127.0.0.1:1234/v1").rstrip("/")
-    model_name = os.getenv("LLM_MODEL", "spark-x2.6-4b-uncensored")
-    response = httpx.get(f"{base_url}/models", timeout=5)
+        "LLM_BASE_URL", "https://integrate.api.nvidia.com/v1").rstrip("/")
+    model_name = os.getenv(
+        "LLM_MODEL", "nvidia/nemotron-3.5-super-vl-120b-a12b")
+    api_key = os.getenv("LLM_API_KEY")
+    headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
+    response = httpx.get(f"{base_url}/models", headers=headers, timeout=10)
     response.raise_for_status()
     models = {
         str(item.get("id")) for item in response.json().get("data", []) if item.get("id")

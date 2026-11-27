@@ -1,6 +1,6 @@
 # NVD-XRAY
 
-NVD-XRAY is a production-oriented vulnerability research console for NVD CVE API 2.0. It provides a responsive Flask web interface, concise reports, and a report-grounded chatbot backed by LM Studio's OpenAI-compatible local endpoint and Pydantic validation.
+NVD-XRAY is a production-oriented vulnerability research console for NVD CVE API 2.0. It provides a responsive Flask web interface, concise reports, and a report-grounded chatbot backed by NVIDIA's OpenAI-compatible API and Pydantic validation.
 
 ![NVD-XRAY web console showing a validated CVE report](docs/nvd-xray-web-ui.png)
 
@@ -25,14 +25,7 @@ pip install -r requirements.txt
 Copy-Item .env.example .env
 ```
 
-Start LM Studio and load the requested local model:
-
-```powershell
-lms server start
-lms load "spark-x2.6-4b-uncensored" --identifier "spark-x2.6-4b-uncensored" -y
-```
-
-Set the matching `LLM_*` values in `.env`. An `NVD_API_KEY` is optional but recommended for higher NVD request limits. Never commit `.env`.
+Set `LLM_API_KEY` to an NVIDIA API key and keep the NVIDIA base URL/model values in `.env`. An `NVD_API_KEY` is optional but recommended for higher NVD request limits. Never commit `.env`.
 
 ## Web Console
 
@@ -48,7 +41,7 @@ Run with the production WSGI server:
 waitress-serve --host=127.0.0.1 --port=5000 app:app
 ```
 
-Open `http://127.0.0.1:5000`. Liveness is available at `http://127.0.0.1:5000/health`; model readiness is available at `http://127.0.0.1:5000/ready`. The readiness route returns `503` when LM Studio or the configured model is unavailable.
+Open `http://127.0.0.1:5000`. Liveness is available at `http://127.0.0.1:5000/health`; model readiness is available at `http://127.0.0.1:5000/ready`. The readiness route returns `503` when NVIDIA or the configured model is unavailable.
 
 After a report is generated, the assistant button opens a report-grounded chatbot. The browser receives a short-lived `report_id`; the server resolves the validated report from its own bounded cache and never accepts report JSON from the browser.
 
@@ -57,7 +50,7 @@ After a report is generated, the assistant button opens a report-grounded chatbo
 - `POST /api/research`: accepts `{"query": "CVE-2021-44228"}` and returns a validated report plus `report_id`.
 - `POST /api/chat`: accepts `report_id` and `question`, then answers only from the cached report context.
 - `GET /health`: process liveness.
-- `GET /ready`: verifies LM Studio is reachable and the configured model is available.
+- `GET /ready`: verifies the NVIDIA endpoint is reachable and the configured model is available.
 
 ## Command Line
 
@@ -73,9 +66,9 @@ The default CLI format is a readable terminal report. Use `--json` for automatio
 ## Environment
 
 ```text
-LLM_API_KEY=lm-studio
-LLM_BASE_URL=http://127.0.0.1:1234/v1
-LLM_MODEL=spark-x2.6-4b-uncensored
+LLM_API_KEY=your_nvidia_api_key
+LLM_BASE_URL=https://integrate.api.nvidia.com/v1
+LLM_MODEL=nvidia/nemotron-3.5-super-vl-120b-a12b
 LLM_TIMEOUT_SECONDS=120
 NVD_API_KEY=
 NVD_TIMEOUT_SECONDS=20
@@ -90,7 +83,7 @@ FLASK_DEBUG=false
 
 PoC links are displayed as external metadata from PoCIndex. NVD-XRAY does not download, validate, or execute PoC code and does not claim that any linked repository is safe.
 
-For internet-facing deployment, place the WSGI server behind TLS, authentication, request-rate controls, a durable shared report store, and a secrets manager. Keep LM Studio bound to localhost unless an authenticated private network exposes it intentionally.
+For internet-facing deployment, place the WSGI server behind TLS, authentication, request-rate controls, a durable shared report store, and a secrets manager. Store the NVIDIA API key in server-side secret storage and never expose it through browser code.
 
 ## Tests
 
@@ -101,5 +94,5 @@ python -m unittest discover -s tests -v
 ## Runtime Requirements
 
 - Python 3.11 or newer
-- LM Studio local server with `spark-x2.6-4b-uncensored` loaded and tool use enabled
-- Outbound HTTPS access to NVD and PoCIndex
+- NVIDIA API credentials with access to `nvidia/nemotron-3.5-super-vl-120b-a12b`
+- Outbound HTTPS access to NVD, PoCIndex, and NVIDIA's API

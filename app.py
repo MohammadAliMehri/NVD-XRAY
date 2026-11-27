@@ -6,7 +6,7 @@ from collections import OrderedDict
 
 from flask import Flask, jsonify, render_template, request
 
-from agent import answer_report_question, check_local_model_ready
+from agent import answer_report_question, check_model_ready
 from reporting import compact_products
 from schemas import VulnerabilityReport
 from service import ResearchInputError, research_report
@@ -94,7 +94,7 @@ def create_app() -> Flask:
             return jsonify({"answer": answer, "cve_id": report.cve_id})
         except Exception:
             app.logger.exception("Report chat request failed")
-            return jsonify({"error": "The local model is unavailable. Check LM Studio and try again."}), 502
+            return jsonify({"error": "The configured model is unavailable. Check API connectivity and try again."}), 502
 
     @app.get("/health")
     def health():
@@ -103,10 +103,10 @@ def create_app() -> Flask:
     @app.get("/ready")
     def ready():
         try:
-            model_status = check_local_model_ready()
+            model_status = check_model_ready()
         except Exception:
             app.logger.warning(
-                "LM Studio readiness check failed", exc_info=True)
+                "Model readiness check failed", exc_info=True)
             return jsonify({"status": "not-ready", "model": "unavailable"}), 503
         return jsonify({"status": "ready" if model_status["ready"] else "not-ready", **model_status}), 200 if model_status["ready"] else 503
 

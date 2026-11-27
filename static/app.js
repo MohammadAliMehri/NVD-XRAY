@@ -34,7 +34,7 @@ async function loadReadiness() {
         state.lastChild.textContent = `${payload.model} ready`;
         dot.className = 'pulse-dot';
     } catch {
-        state.lastChild.textContent = 'Local model offline';
+        state.lastChild.textContent = 'Model offline';
         dot.className = 'pulse-dot offline';
     }
 }

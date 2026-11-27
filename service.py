@@ -93,8 +93,9 @@ def research_report(query: str) -> tuple[VulnerabilityReport, dict[str, Any]]:
                 timeout=float(os.getenv("POCINDEX_TIMEOUT_SECONDS", "15")),
                 limit=int(os.getenv("POCINDEX_RESULT_LIMIT", "6")),
             ).get_public_pocs(report.cve_id)
-            report = report.model_copy(
-                update={
+            report = VulnerabilityReport.model_validate(
+                {
+                    **report.model_dump(),
                     "public_poc_count": poc_data["total_count"],
                     "public_pocs": [
                         PublicPoc.model_validate(item) for item in poc_data["items"]

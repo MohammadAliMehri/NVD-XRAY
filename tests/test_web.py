@@ -15,13 +15,13 @@ class WebAppTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'research-form', response.data)
 
-    @patch("app.check_local_model_ready")
+    @patch("app.check_model_ready")
     def test_readiness_reports_model_state(self, mock_ready):
         mock_ready.return_value = {
             "ready": True,
-            "model": "spark-x2.6-4b-uncensored",
-            "available_models": ["spark-x2.6-4b-uncensored"],
-            "base_url": "http://127.0.0.1:1234/v1",
+            "model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+            "available_models": ["nvidia/nemotron-3.5-super-vl-120b-a12b"],
+            "base_url": "https://integrate.api.nvidia.com/v1",
         }
         response = self.client.get("/ready")
         self.assertEqual(response.status_code, 200)
